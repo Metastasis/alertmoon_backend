@@ -117,9 +117,6 @@ class SmsLogRepository {
 }
 
 const plugin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
-  fastify.get('/', async function (request, reply) {
-    return 'this is an device'
-  })
   fastify.post('/subscribe', subscribeOptions, async function (request: SubscribeRequest, reply) {
     const repo = new DeviceSubscriptionRepository(deviceDb)
     return repo.add(request.body)
