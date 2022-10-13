@@ -1,4 +1,11 @@
 import { FastifyPluginAsync, FastifyRequest } from "fastify"
+import {V0alpha2Api, Configuration} from '@ory/client';
+
+const ory = new V0alpha2Api(
+  new Configuration({
+    basePath: process.env.ORY_SDK_URL,
+  }),
+);
 
 interface PhoneNumber {
   mobileNumber: string
@@ -117,6 +124,14 @@ class SmsLogRepository {
 }
 
 const plugin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
+  fastify.decorateRequest('session', null)
+
+  fastify.addHook('preHandler', async (request, reply) => {
+    const {data: session} = await ory.toSession(undefined, request.headers.cookie)
+    if (!session) return reply.status(401);
+    (request as any).session = session
+  });
+
   fastify.post('/subscribe', subscribeOptions, async function (request: SubscribeRequest, reply) {
     const repo = new DeviceSubscriptionRepository(deviceDb)
     return repo.add(request.body)
