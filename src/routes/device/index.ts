@@ -1,5 +1,7 @@
-import { FastifyPluginAsync, FastifyRequest } from "fastify"
+import {FastifyPluginAsync, FastifyRequest} from 'fastify';
 import {V0alpha2Api, Configuration} from '@ory/client';
+import {DeviceModel} from './schema';
+
 
 const ory = new V0alpha2Api(
   new Configuration({
@@ -7,20 +9,19 @@ const ory = new V0alpha2Api(
   }),
 );
 
+
 interface PhoneNumber {
-  mobileNumber: string
-  countryCode: string
+  mobileNumber: string;
+  countryCode: string;
 }
-interface DeviceSubscription {
-  id: string
-  mobileNumber: string
-  countryCode: string
-}
+
+
 interface SmsLog {
-  id: string,
-  subscriptionId: DeviceSubscription['id'],
+  _id: string,
   content: string
 }
+
+
 type SubscribeRequest = FastifyRequest<{
   Body: PhoneNumber
 }>;
@@ -28,13 +29,12 @@ type SubscribeSearchRequest = FastifyRequest<{
   Body: PhoneNumber
 }>;
 type SmsLogRequest = FastifyRequest<{
-  Body: {
-    subscriptionId: DeviceSubscription['id']
+  Body: PhoneNumber & {
     content: string
   }
 }>;
 type SmsSearchRequest = FastifyRequest<{
-  Body: {
+  Body: PhoneNumber & {
     page?: number
   }
 }>;
@@ -42,14 +42,15 @@ const subscribeOptions = {
   schema: {
     body: {
       type: 'object',
+      additionalProperties: false,
       required: ['mobileNumber', 'countryCode'],
       properties: {
-        mobileNumber: { type: 'string' },
-        countryCode: { type: 'string' }
+        mobileNumber: {type: 'string'},
+        countryCode: {type: 'string'}
       }
     }
   }
-}
+};
 
 const subscribeSearchOptions = {
   schema: {
@@ -57,98 +58,102 @@ const subscribeSearchOptions = {
       type: 'object',
       required: ['mobileNumber', 'countryCode'],
       properties: {
-        mobileNumber: { type: 'string' },
-        countryCode: { type: 'string' }
+        mobileNumber: {type: 'string'},
+        countryCode: {type: 'string'}
       }
     }
   }
-}
+};
 
 const smsLogOptions = {
   schema: {
     body: {
       type: 'object',
-      required: ['subscriptionId', 'content'],
+      required: ['mobileNumber', 'countryCode', 'content'],
       properties: {
-        subscriptionId: { type: 'string' },
-        content: { type: 'string' }
+        mobileNumber: {type: 'string'},
+        countryCode: {type: 'string'},
+        content: {type: 'string'}
       }
     }
   }
-}
+};
 
 const smsSearchOptions = {
   schema: {
     body: {
       type: 'object',
+      required: ['mobileNumber', 'countryCode'],
       properties: {
-        page: { type: 'number' },
+        mobileNumber: {type: 'string'},
+        countryCode: {type: 'string'},
+        page: {type: 'number'},
       }
     }
   }
-}
+};
 
-const deviceDb: Map<string, DeviceSubscription> = new Map();
-class DeviceSubscriptionRepository {
-  db: Map<string, DeviceSubscription>;
-
-  constructor(db: Map<string, DeviceSubscription>) {
-    this.db = db;
+class DeviceRepository {
+  add({countryCode, mobileNumber}: PhoneNumber) {
+    const device = new DeviceModel({
+      _id: `${countryCode}${mobileNumber}`,
+      mobileNumber,
+      countryCode,
+      smsLogs: []
+    });
+    return device.save();
   }
 
-  add(phone: PhoneNumber): Promise<DeviceSubscription> {
-    return Promise.resolve({id: '', ...phone});
+  find({countryCode, mobileNumber}: PhoneNumber) {
+    return DeviceModel.findById(`${countryCode}${mobileNumber}`);
   }
 
-  find(phone: PhoneNumber): Promise<DeviceSubscription['id'] | null> {
-    return Promise.resolve('');
-  }
-}
-
-const smsDb: Set<SmsLog> = new Set();
-class SmsLogRepository {
-  db: Set<SmsLog>;
-
-  constructor(db: Set<SmsLog>) {
-    this.db = db
+  logSms(params: Pick<SmsLog, 'content'> & PhoneNumber) {
+    const {countryCode, mobileNumber, content} = params;
+    const deviceParams = {countryCode, mobileNumber};
+    return this.find(deviceParams).then(device => {
+      if (!device) return null;
+      device.smsLogs.push({content});
+      return device.save();
+    });
   }
 
-  add(log: Pick<SmsLog, 'subscriptionId' | 'content'>): Promise<SmsLog> {
-    return Promise.resolve({id: '', ...log})
-  }
-
-  find(query: {page?: number, perPage?: number}): Promise<SmsLog[] | []> {
-    const {} = query || {page: 1, perPage: 20};
-    return Promise.resolve([]);
+  findSms(params: {page?: number, perPage?: number} & PhoneNumber) {
+    const {countryCode, mobileNumber, page = 0, perPage = 10} = params;
+    const deviceParams = {countryCode, mobileNumber};
+    return this.find(deviceParams).then(device => {
+      if (!device) return null;
+      return device.smsLogs.slice(page * perPage, page * perPage + perPage);
+    });
   }
 }
 
 const plugin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
-  fastify.decorateRequest('session', null)
+  fastify.decorateRequest('session', null);
 
   fastify.addHook('preHandler', async (request, reply) => {
-    const {data: session} = await ory.toSession(undefined, request.headers.cookie)
+    const {data: session} = await ory.toSession(undefined, request.headers.cookie);
     if (!session) return reply.status(401);
-    (request as any).session = session
+    (request as any).session = session;
   });
 
   fastify.post('/subscribe', subscribeOptions, async function (request: SubscribeRequest, reply) {
-    const repo = new DeviceSubscriptionRepository(deviceDb)
-    return repo.add(request.body)
-  })
+    const repo = new DeviceRepository();
+    return repo.add(request.body);
+  });
   fastify.post('/search', subscribeSearchOptions, async function (request: SubscribeSearchRequest, reply) {
-    const repo = new DeviceSubscriptionRepository(deviceDb)
-    return repo.find(request.body)
-  })
+    const repo = new DeviceRepository();
+    return repo.find(request.body);
+  });
   fastify.post('/sms/log', smsLogOptions, async function (request: SmsLogRequest, reply) {
-    const repo = new SmsLogRepository(smsDb)
-    return repo.add(request.body)
-  })
+    const repo = new DeviceRepository();
+    return repo.logSms(request.body);
+  });
   fastify.post('/sms/search', smsSearchOptions, async function (request: SmsSearchRequest, reply) {
-    const repo = new SmsLogRepository(smsDb)
-    return repo.find(request.body.page ? request.body : {})
-  })
-}
+    const repo = new DeviceRepository();
+    return repo.findSms(request.body);
+  });
+};
 
 export default plugin;
 export const autoPrefix = '/api/v1/device';

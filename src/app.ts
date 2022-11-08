@@ -1,7 +1,8 @@
 import { join } from 'path';
+import mongoose from 'mongoose';
 import AutoLoad, {AutoloadPluginOptions} from '@fastify/autoload';
 import Cors from '@fastify/cors';
-import { FastifyPluginAsync } from 'fastify';
+import {FastifyPluginAsync} from 'fastify';
 
 export type AppOptions = {
   // Place your custom options for app below here.
@@ -12,12 +13,18 @@ export type AppOptions = {
 const options: AppOptions = {
 }
 
+mongoose.connect(String(process.env.SRB_MONGO_CONNECTION_URL)).catch((err) => {
+  if (err) {
+    console.error(err);
+    return;
+  }
+});
+
 const app: FastifyPluginAsync<AppOptions> = async (
     fastify,
     opts
 ): Promise<void> => {
   // Place here your custom code!
-
   fastify.register(Cors, {
     origin: [
       'http://localhost:3000',
@@ -42,7 +49,6 @@ const app: FastifyPluginAsync<AppOptions> = async (
     dir: join(__dirname, 'routes'),
     options: opts
   })
-
 };
 
 export default app;
