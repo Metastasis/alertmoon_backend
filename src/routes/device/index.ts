@@ -21,12 +21,15 @@ interface SmsLog {
   content: string
 }
 
+interface Pagination {
+  page: number
+}
 
 type SubscribeRequest = FastifyRequest<{
   Body: PhoneNumber
 }>;
 type SubscribeSearchRequest = FastifyRequest<{
-  Body: PhoneNumber
+  Body: PhoneNumber & Pagination
 }>;
 type SmsLogRequest = FastifyRequest<{
   Body: PhoneNumber & {
@@ -56,10 +59,10 @@ const subscribeSearchOptions = {
   schema: {
     body: {
       type: 'object',
-      required: ['mobileNumber', 'countryCode'],
       properties: {
         mobileNumber: {type: 'string'},
-        countryCode: {type: 'string'}
+        countryCode: {type: 'string'},
+        page: {type: 'string'}
       }
     }
   }
@@ -104,14 +107,14 @@ class DeviceRepository {
     return device.save();
   }
 
-  find({countryCode, mobileNumber}: PhoneNumber) {
-    return DeviceModel.findById(`${countryCode}${mobileNumber}`);
+  find(_params: PhoneNumber & Pagination) {
+    return DeviceModel.find().sort({createdAt: 'asc'});
   }
 
   logSms(params: Pick<SmsLog, 'content'> & PhoneNumber) {
     const {countryCode, mobileNumber, content} = params;
     const deviceParams = {countryCode, mobileNumber};
-    return this.find(deviceParams).then(device => {
+    return DeviceModel.findById(deviceParams).then(device => {
       if (!device) return null;
       device.smsLogs.push({content});
       return device.save();
@@ -121,7 +124,7 @@ class DeviceRepository {
   findSms(params: {page?: number, perPage?: number} & PhoneNumber) {
     const {countryCode, mobileNumber, page = 0, perPage = 10} = params;
     const deviceParams = {countryCode, mobileNumber};
-    return this.find(deviceParams).then(device => {
+    return DeviceModel.findById(deviceParams).then(device => {
       if (!device) return null;
       return device.smsLogs.slice(page * perPage, page * perPage + perPage);
     });
