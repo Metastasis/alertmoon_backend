@@ -123,7 +123,7 @@ class DeviceRepository {
 
   findSms(params: {page?: number, perPage?: number} & PhoneNumber) {
     const {countryCode, mobileNumber, page = 0, perPage = 10} = params;
-    const deviceParams = {countryCode, mobileNumber};
+    const deviceParams = `${countryCode}${mobileNumber}`;
     return DeviceModel.findById(deviceParams).then(device => {
       if (!device) return null;
       return device.smsLogs.slice(page * perPage, page * perPage + perPage);
