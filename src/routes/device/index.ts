@@ -12,7 +12,6 @@ const ory = new V0alpha2Api(
 
 interface PhoneNumber {
   mobileNumber: string;
-  countryCode: string;
 }
 
 
@@ -46,7 +45,7 @@ const subscribeOptions = {
     body: {
       type: 'object',
       additionalProperties: false,
-      required: ['mobileNumber', 'countryCode'],
+      required: ['mobileNumber'],
       properties: {
         mobileNumber: {type: 'string'},
         countryCode: {type: 'string'}
@@ -72,7 +71,7 @@ const smsLogOptions = {
   schema: {
     body: {
       type: 'object',
-      required: ['mobileNumber', 'countryCode', 'content'],
+      required: ['mobileNumber', 'content'],
       properties: {
         mobileNumber: {type: 'string'},
         countryCode: {type: 'string'},
@@ -86,7 +85,7 @@ const smsSearchOptions = {
   schema: {
     body: {
       type: 'object',
-      required: ['mobileNumber', 'countryCode'],
+      required: ['mobileNumber'],
       properties: {
         mobileNumber: {type: 'string'},
         countryCode: {type: 'string'},
@@ -97,11 +96,9 @@ const smsSearchOptions = {
 };
 
 class DeviceRepository {
-  add({countryCode, mobileNumber}: PhoneNumber) {
+  add({mobileNumber}: PhoneNumber) {
     const device = new DeviceModel({
-      _id: `${countryCode}${mobileNumber}`,
       mobileNumber,
-      countryCode,
       smsLogs: []
     });
     return device.save();
@@ -112,8 +109,8 @@ class DeviceRepository {
   }
 
   logSms(params: Pick<SmsLog, 'content'> & PhoneNumber) {
-    const {countryCode, mobileNumber, content} = params;
-    const deviceParams = {countryCode, mobileNumber};
+    const {mobileNumber, content} = params;
+    const deviceParams = {mobileNumber};
     return DeviceModel.findById(deviceParams).then(device => {
       if (!device) return null;
       device.smsLogs.push({content});
@@ -122,9 +119,9 @@ class DeviceRepository {
   }
 
   findSms(params: {page?: number, perPage?: number} & PhoneNumber) {
-    const {countryCode, mobileNumber, page = 0, perPage = 10} = params;
-    const deviceParams = `${countryCode}${mobileNumber}`;
-    return DeviceModel.findById(deviceParams).then(device => {
+    const {mobileNumber, page = 0, perPage = 10} = params;
+    const deviceParams = {mobileNumber};
+    return DeviceModel.findOne(deviceParams).then(device => {
       if (!device) return null;
       return device.smsLogs.slice(page * perPage, page * perPage + perPage);
     });
