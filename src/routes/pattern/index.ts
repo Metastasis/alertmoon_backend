@@ -113,7 +113,9 @@ const plugin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.decorateRequest('session', null);
 
   fastify.addHook('preHandler', async (request, reply) => {
-    const {data: session} = await ory.toSession(undefined, request.headers.cookie);
+    const mobileToken = (request.body as any)?.sessionToken;
+    const {cookie} = request.headers;
+    const {data: session} = await ory.toSession(mobileToken, cookie);
     if (!session) return reply.status(401);
     (request as any).session = session;
   });

@@ -21,3 +21,19 @@ Run the test cases.
 ## Learn More
 
 To learn Fastify, check out the [Fastify documentation](https://www.fastify.io/docs/latest/).
+
+## Переменные окружения
+
+SMS_USE_HTTPS
+
+Позволяет использовать https, например, для локальной разработки.
+
+Для этого нужно в папку https положить два файла .key, .pem.
+
+Сгенерировать файлы можно при помощи выполнения команды в папке https
+
+```bash
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout cert.key -out cert.pem -config req.cnf -sha256
+```
+
+На macos дополнительно требуется добавить их в доверенные сертификаты в системе
