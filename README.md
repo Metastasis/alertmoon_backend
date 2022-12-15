@@ -24,7 +24,7 @@ To learn Fastify, check out the [Fastify documentation](https://www.fastify.io/d
 
 ## Переменные окружения
 
-SMS_USE_HTTPS
+ALERTMOON_USE_HTTPS
 
 Позволяет использовать https, например, для локальной разработки.
 

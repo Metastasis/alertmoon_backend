@@ -11,7 +11,7 @@ export type AppOptions = {
 } & Partial<AutoloadPluginOptions>;
 
 
-const useHttps = Boolean(JSON.parse(process.env.SMS_USE_HTTPS || 'false'));
+const useHttps = Boolean(JSON.parse(process.env.ALERTMOON_USE_HTTPS || 'false'));
 const httpsOptions = {
   allowHTTP1: true,
   key: readFileSync('./https/cert.key', {encoding: 'utf-8'}),
@@ -23,7 +23,7 @@ const options: AppOptions = {
   https: useHttps && httpsOptions
 };
 
-mongoose.connect(String(process.env.SRB_MONGO_CONNECTION_URL)).catch((err) => {
+mongoose.connect(String(process.env.ALERTMOON_MONGO_URL)).catch((err) => {
   if (err) {
     console.error(err);
     return;
@@ -36,7 +36,9 @@ const app: FastifyPluginAsync<AppOptions> = async (
 ): Promise<void> => {
   // Place here your custom code!
   fastify.register(Cors, {
-    origin: '*',
+    origin: [
+      'http://localhost:3000',
+    ],
     credentials: true
   });
 

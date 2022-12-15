@@ -14,7 +14,7 @@ const ketoConf = new KetoConfiguration({
   basePath: process.env.ORY_SDK_URL,
   baseOptions: {
     headers: {
-      'Authorization': process.env.SMS_BACKEND_KETO_TOKEN,
+      'Authorization': process.env.ORY_KETO_TOKEN,
     },
   },
 });
