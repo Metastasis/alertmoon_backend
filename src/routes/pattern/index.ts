@@ -44,6 +44,29 @@ const createOptions = {
   }
 };
 
+interface EditPatternParams {
+  patternId: string;
+  sender: string;
+  content?: string;
+}
+
+type EditPatternRequest = FastifyRequest<{
+  Body: EditPatternParams
+}>;
+
+const editOptions = {
+  schema: {
+    body: {
+      type: 'object',
+      required: ['sender'],
+      properties: {
+        sender: {type: 'string'},
+        content: {type: 'string'},
+      }
+    }
+  }
+};
+
 
 interface RemoveParams {
   patternId: string;
@@ -108,6 +131,24 @@ const grantOptions = {
   }
 };
 
+type ListAccessesRequest = FastifyRequest<{
+  Body: {
+    patternId: string
+  }
+}>;
+
+const listAccessesOptions = {
+  schema: {
+    body: {
+      type: 'object',
+      required: ['patternId'],
+      properties: {
+        patternId: {type: 'string'}
+      }
+    }
+  }
+};
+
 
 const plugin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
   fastify.decorateRequest('session', null);
@@ -138,6 +179,21 @@ const plugin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
       object: String(saved._id),
     });
     log(mapAxios(ketoResult));
+    return {status: 'ok'};
+  });
+  fastify.post('/update', editOptions, async function (request: EditPatternRequest, reply) {
+    // check if its beneficiary. if not then reject
+    // save pattern and make current user owner of pattern
+    const session: Session = (request as any).session;
+    const found = await PatternModel.findOne({
+      _id: request.body.patternId,
+      beneficiaryId: session.identity.id
+    });
+    if (!found) return {status: 'not_found'};
+    found.sender = request.body.sender;
+    found.content = request.body.content || undefined;
+    const saved = await found.save();
+    console.log(saved);
     return {status: 'ok'};
   });
   fastify.post('/remove', removeOptions, async function (request: RemoveRequest, reply) {
@@ -194,6 +250,48 @@ const plugin: FastifyPluginAsync = async (fastify, opts): Promise<void> => {
     });
     log(mapAxios(result));
     return {status: 'ok'};
+  });
+  fastify.post('/revoke-access', grantOptions, async function (request: GrantRequest, reply) {
+    // check if its beneficiary and is owner of pattern. If not then reject
+    // request confidant's email and try to find user
+    // call ory to create permission rule with confidant's id
+    const session: Session = (request as any).session;
+    const allowed = await ketoRead.getCheck('NotificationPattern', request.body.patternId, 'owners', session.identity.id);
+    if (!allowed) return {status: 'not_an_owner'};
+    const result = await ketoWrite.deleteRelationTuples(
+      'NotificationPattern',
+      request.body.patternId,
+      'viewers',
+      request.body.confidantEmail
+    );
+    log(mapAxios(result));
+    return {status: 'ok'};
+  });
+  fastify.post('/list-confidants', listAccessesOptions, async function (request: ListAccessesRequest, reply) {
+    // check if its beneficiary and is owner of pattern. If not then reject
+    // request all viewers of pattern
+    const session: Session = (request as any).session;
+    const allowed = await ketoRead.getCheck('NotificationPattern', request.body.patternId, 'owners', session.identity.id);
+    if (!allowed) return {status: 'not_an_owner'};
+    const relations = await ketoRead.getRelationTuples(
+      undefined,
+      undefined,
+      'NotificationPattern',
+      request.body.patternId,
+      'viewers',
+      undefined
+    );
+    log(mapAxios(relations));
+    if (!Array.isArray(relations.data.relation_tuples)) {
+      return {status: 'error'};
+    }
+    return {
+      status: 'ok',
+      payload: relations.data.relation_tuples.map(tuple => ({
+        patternId: tuple.object,
+        confidantEmail: tuple.subject_id
+      }))
+    };
   });
 };
 
