@@ -17,7 +17,7 @@ services:
         target: /etc/nginx/sites-enabled/alertmoon.com.conf
       - type: bind
         source: ./nginx/nginx.conf
-        target: /etc/nginx.conf
+        target: /etc/nginx/nginx.conf
       # - ./ssl:/ssl/
     networks:
       - intranet

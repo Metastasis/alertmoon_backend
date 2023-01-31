@@ -32,8 +32,8 @@ services:
     ports:
       - "4455:4455"
     environment:
-      - KRATOS_PUBLIC_URL=http://kratos:4433/api/kratos/public
-      - KRATOS_BROWSER_URL=http://127.0.0.1:4433/api/kratos/public
+      - KRATOS_PUBLIC_URL=http://kratos:4433/
+      - KRATOS_BROWSER_URL=http://127.0.0.1:4444/api/kratos/public
       - PORT=4455
       - SECURITY_MODE=
     networks:
@@ -50,7 +50,6 @@ services:
     environment:
       - DSN=postgres://kratos:secret@postgresd:5432/kratos?sslmode=disable&max_conns=20&max_idle_conns=4
       - LOG_LEVEL=trace
-      - SERVE_PUBLIC_BASE_URL2=http://127.0.0.1:4433/aaa/
     command: serve -c /etc/config/kratos/kratos.yml --dev --watch-courier
     volumes:
       - type: volume
