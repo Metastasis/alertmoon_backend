@@ -30,6 +30,8 @@ mongoose.connect(String(process.env.ALERTMOON_MONGO_URL)).catch((err) => {
   }
 });
 
+// TODO: ПОДНЯТЬ KETO
+
 const app: FastifyPluginAsync<AppOptions> = async (
     fastify,
     opts
@@ -38,6 +40,9 @@ const app: FastifyPluginAsync<AppOptions> = async (
   fastify.register(Cors, {
     origin: [
       'http://localhost:3000',
+      'http://localhost:3001',
+      'http://127.0.0.1:3000',
+      'http://127.0.0.1:3001',
     ],
     credentials: true
   });
