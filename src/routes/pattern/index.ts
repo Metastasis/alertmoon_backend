@@ -10,16 +10,23 @@ const ory = new V0alpha2Api(
     basePath: process.env.ORY_SDK_URL,
   }),
 );
-const ketoConf = new KetoConfiguration({
-  basePath: process.env.ORY_SDK_URL,
-  baseOptions: {
-    headers: {
-      'Authorization': process.env.ORY_KETO_TOKEN,
-    },
-  },
-});
-const ketoWrite = new WriteApi(ketoConf);
-const ketoRead = new ReadApi(ketoConf);
+
+const ketoWrite = new WriteApi(new KetoConfiguration({
+  basePath: process.env.ORY_SDK_KETO_WRITE_URL,
+  // baseOptions: {
+  //   headers: {
+  //     'Authorization': process.env.ORY_KETO_TOKEN,
+  //   },
+  // },
+}));
+const ketoRead = new ReadApi(new KetoConfiguration({
+  basePath: process.env.ORY_SDK_KETO_READ_URL,
+  // baseOptions: {
+  //   headers: {
+  //     'Authorization': process.env.ORY_KETO_TOKEN,
+  //   },
+  // },
+}));
 
 
 interface CreatePatternParams {

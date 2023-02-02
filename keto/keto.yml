@@ -1,0 +1,20 @@
+version: v0.10.0-alpha.0
+
+log:
+  level: debug
+
+serve:
+  read:
+    host: 127.0.0.1
+    port: 4466
+  write:
+    host: 127.0.0.1
+    port: 4467
+
+namespaces:
+  location: file://home/ory/namespaces/sms-reader.ts
+#  - name: NotificationPattern
+#  - name: User
+#  - name: Group
+
+dsn: memory
