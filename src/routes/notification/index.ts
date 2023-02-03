@@ -1,8 +1,8 @@
 import {FastifyPluginAsync, FastifyRequest} from 'fastify';
 import {V0alpha2Api, Configuration, Session} from '@ory/client';
-import {NotificationModel} from './schema';
 import {ReadApi, Configuration as KetoConfiguration} from '@ory/keto-client';
 import {Types} from 'mongoose';
+import {NotificationModel} from './schema';
 
 
 const ory = new V0alpha2Api(
@@ -10,18 +10,15 @@ const ory = new V0alpha2Api(
     basePath: process.env.ORY_SDK_URL,
   }),
 );
-const ketoConf = new KetoConfiguration({
-  basePath: process.env.ORY_SDK_URL,
-  baseOptions: {
-    headers: {
-      'Authorization': process.env.ORY_KETO_TOKEN,
-    },
-  },
-});
-const ketoRead = new ReadApi(ketoConf);
+const ketoRead = new ReadApi(new KetoConfiguration({
+  basePath: process.env.ORY_SDK_KETO_READ_URL,
+  // baseOptions: {
+  //   headers: {
+  //     'Authorization': process.env.ORY_KETO_TOKEN,
+  //   },
+  // },
+}));
 
-// TODO: запретить редактирование паттера в мобилке
-//  т.к неясно что делать с нотификациями, которые неподпадают под паттерн
 
 interface SmsLog {
   beneficiaryId: string

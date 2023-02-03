@@ -118,11 +118,14 @@ services:
       - "4467:4467"
     depends_on:
       - keto-migrate
-    command: serve -c /home/ory/keto.yml
+    command: serve
     volumes:
       - type: bind
-        source: ./keto
-        target: /home/ory
+        source: ./keto/keto.yml
+        target: /home/ory/keto.yml
+      - type: bind
+        source: ./keto/namespaces
+        target: /home/ory/namespaces
     networks:
       - intranet
 
