@@ -1,0 +1,14 @@
+node_modules
+dist
+.nyc_output
+.idea
+.git
+*.log
+nginx
+kratos
+keto
+https
+.env*
+init-mongo.js
+openapi.json
+sms-backend.paw

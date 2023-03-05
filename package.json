@@ -9,6 +9,7 @@
   "scripts": {
     "test": "npm run build:ts && tsc -p test/tsconfig.json && tap --ts \"test/**/env.test.ts\"",
     "start": "npm run build:ts && fastify start --port 3001 -l info --plugin-timeout 60000 --options dist/app.js",
+    "deploy": "fastify start --port 3001 -l info --plugin-timeout 60000 --options dist/app.js",
     "build:ts": "tsc",
     "watch:ts": "tsc -w",
     "dev": "npm run build:ts && concurrently -k -p \"[{name}]\" -n \"TypeScript,App\" -c \"yellow.bold,cyan.bold\" \"npm:watch:ts\" \"npm:dev:start\"",
@@ -23,19 +24,19 @@
     "@ory/cli": "0.1.44",
     "@ory/client": "0.2.0-alpha.48",
     "@ory/keto-client": "0.10.0-alpha.0",
+    "@ory/keto-namespace-types": "0.10.0-alpha.0",
     "fastify": "4.0.0",
     "fastify-cli": "5.5.0",
     "fastify-plugin": "4.0.0",
-    "mongoose": "6.6.2"
+    "fastify-tsconfig": "1.0.1",
+    "mongoose": "6.6.2",
+    "typescript": "4.5.4"
   },
   "devDependencies": {
-    "@ory/keto-namespace-types": "0.10.0-alpha.0",
     "@types/node": "18.0.0",
     "@types/tap": "15.0.5",
     "concurrently": "7.0.0",
-    "fastify-tsconfig": "1.0.1",
     "tap": "16.1.0",
-    "ts-node": "10.4.0",
-    "typescript": "4.5.4"
+    "ts-node": "10.4.0"
   }
 }
