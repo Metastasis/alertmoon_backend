@@ -30,8 +30,6 @@ mongoose.connect(String(process.env.ALERTMOON_MONGO_URL)).catch((err) => {
   }
 });
 
-// TODO: ПОДНЯТЬ KETO
-
 const app: FastifyPluginAsync<AppOptions> = async (
     fastify,
     opts
