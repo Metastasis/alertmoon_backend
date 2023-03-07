@@ -19,8 +19,18 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: get-npm-version
+        id: package-version
+        uses: martinbeentjes/npm-get-version-action@main
+
       - name: Build the Docker image
-        run: docker build . --tag ${{ secrets.DOCKERHUB_USERNAME }}/alertmoon-backend:latest
+        run: docker build . --tag ${{ secrets.DOCKERHUB_USERNAME }}/alertmoon-backend:${{ steps.package-version.outputs.current-version}}
 
       - name: Push the Docker image
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/alertmoon-backend:${{ steps.package-version.outputs.current-version}}
+
+      - name: Build the Docker image (latest)
+        run: docker build . --tag ${{ secrets.DOCKERHUB_USERNAME }}/alertmoon-backend:latest
+
+      - name: Push the Docker image (latest)
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/alertmoon-backend:latest
