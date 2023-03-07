@@ -12,15 +12,15 @@ export type AppOptions = {
 
 
 const useHttps = Boolean(JSON.parse(process.env.ALERTMOON_USE_HTTPS || 'false'));
-const httpsOptions = {
+const httpsOptions = useHttps ? {
   allowHTTP1: true,
   key: readFileSync('./https/cert.key', {encoding: 'utf-8'}),
   cert: readFileSync('./https/cert.pem', {encoding: 'utf-8'})
-};
+} : undefined;
 // Pass --options via CLI arguments in command to enable these options.
 const options: AppOptions = {
   // @ts-ignore
-  https: useHttps && httpsOptions
+  https: httpsOptions
 };
 
 mongoose.connect(String(process.env.ALERTMOON_MONGO_URL)).catch((err) => {
