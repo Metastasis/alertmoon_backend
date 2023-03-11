@@ -18,7 +18,7 @@ jobs:
           docker rm -fv alertmoon_backend || true
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
           docker pull ${{ secrets.DOCKERHUB_USERNAME }}/alertmoon-backend:latest
-          docker run -d -i --name alertmoon_backend -p 3001:3001 \
+          docker run -d -i --name alertmoon_backend --network alertmoon_net -p 3001:3001 \
             -e "ORY_SDK_URL=${{ secrets.ORY_SDK_URL }}" \
             -e "ORY_SDK_KETO_READ_URL=${{ secrets.ORY_SDK_KETO_READ_URL }}" \
             -e "ORY_SDK_KETO_WRITE_URL=${{ secrets.ORY_SDK_KETO_WRITE_URL }}" \
