@@ -32,6 +32,13 @@ mongoose.connect(String(process.env.ALERTMOON_MONGO_URL)).catch((err) => {
   }
 });
 
+const localOrigins = isProd ? [] : [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+];
+
 const app: FastifyPluginAsync<AppOptions> = async (
     fastify,
     opts
@@ -39,12 +46,9 @@ const app: FastifyPluginAsync<AppOptions> = async (
   // Place here your custom code!
   fastify.register(Cors, {
     origin: [
-      !isProd && 'http://localhost:3000',
-      !isProd && 'http://localhost:3001',
-      !isProd && 'http://127.0.0.1:3000',
-      !isProd && 'http://127.0.0.1:3001',
+      ...localOrigins,
       /https:\/\/([a-z]+\.)?alertmoon\.tech/i
-    ].filter(Boolean),
+    ],
     credentials: true
   });
 

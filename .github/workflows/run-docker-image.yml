@@ -25,4 +25,5 @@ jobs:
             -e "ORY_KETO_TOKEN=${{ secrets.ORY_KETO_TOKEN }}" \
             -e "ALERTMOON_MONGO_URL=${{ secrets.ALERTMOON_MONGO_URL }}" \
             -e "ALERTMOON_USE_HTTPS=false" \
+            -e "NODE_ENV=${{ vars.NODE_ENV }}" \
             metastasis/alertmoon-backend:latest
