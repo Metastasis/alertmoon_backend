@@ -6,6 +6,8 @@ import Cors from '@fastify/cors';
 import {FastifyPluginAsync} from 'fastify';
 
 
+const isProd = process.env.NODE_ENV === 'production';
+
 export type AppOptions = {
   // Place your custom options for app below here.
 } & Partial<AutoloadPluginOptions>;
@@ -37,13 +39,12 @@ const app: FastifyPluginAsync<AppOptions> = async (
   // Place here your custom code!
   fastify.register(Cors, {
     origin: [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://127.0.0.1:3000',
-      'http://127.0.0.1:3001',
-      'https://accounts.alertmoon.tech',
-      'https://alertmoon.tech'
-    ],
+      !isProd && 'http://localhost:3000',
+      !isProd && 'http://localhost:3001',
+      !isProd && 'http://127.0.0.1:3000',
+      !isProd && 'http://127.0.0.1:3001',
+      /https:\/\/([a-z]+\.)?alertmoon\.tech/i
+    ].filter(Boolean),
     credentials: true
   });
 
