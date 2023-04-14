@@ -67,6 +67,7 @@ services:
   kratos:
     depends_on:
       - kratos-migrate
+      - jaeger
     image: oryd/kratos:v0.11.1
     ports:
       - '4433:4433' # public
@@ -75,6 +76,7 @@ services:
     environment:
       - DSN=postgres://kratos:secret@postgresd:5432/kratos?sslmode=disable&max_conns=20&max_idle_conns=4
       - LOG_LEVEL=trace
+      - JAEGER_AGENT_HOST=jaeger
     command: serve -c /etc/config/kratos/kratos.yml --dev --watch-courier
     volumes:
       - type: volume
@@ -118,6 +120,7 @@ services:
       - "4467:4467"
     depends_on:
       - keto-migrate
+      - jaeger
     command: serve
     volumes:
       - type: bind
@@ -126,6 +129,8 @@ services:
       - type: bind
         source: ./keto/namespaces
         target: /home/ory/namespaces
+    environment:
+      - JAEGER_AGENT_HOST=jaeger
     networks:
       - intranet
 
@@ -151,6 +156,18 @@ services:
       # - ./ssl:/ssl/
     networks:
       - intranet
+
+### Logging
+  jaeger:
+    image: jaegertracing/all-in-one:1.40.0
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+      - "14268:14268"
+    restart: on-failure
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
 
 networks:
   intranet:

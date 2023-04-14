@@ -2,11 +2,14 @@ import { join } from 'path';
 import {readFileSync} from 'fs';
 import mongoose from 'mongoose';
 import AutoLoad, {AutoloadPluginOptions} from '@fastify/autoload';
+import openTelemetryPlugin from '@autotelic/fastify-opentelemetry';
 import Cors from '@fastify/cors';
 import {FastifyPluginAsync} from 'fastify';
+import {init as initOpenTelemetry} from './openTelemetryConfig';
 
 
 const isProd = process.env.NODE_ENV === 'production';
+
 
 export type AppOptions = {
   // Place your custom options for app below here.
@@ -32,6 +35,8 @@ mongoose.connect(String(process.env.ALERTMOON_MONGO_URL)).catch((err) => {
   }
 });
 
+initOpenTelemetry({environment: isProd ? 'production' : 'development'});
+
 const localOrigins = isProd ? [] : [
   'http://localhost:3000',
   'http://localhost:3001',
@@ -51,6 +56,8 @@ const app: FastifyPluginAsync<AppOptions> = async (
     ],
     credentials: true
   });
+
+  await fastify.register(openTelemetryPlugin, { wrapRoutes: true });
 
   // Do not touch the following lines
 
