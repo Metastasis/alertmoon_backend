@@ -1,9 +1,6 @@
 import {
   BatchSpanProcessor,
   TraceIdRatioBasedSampler,
-  ConsoleSpanExporter,
-  // WebTracerProvider,
-  // BasicTracerProvider
 } from '@opentelemetry/sdk-trace-base';
 import {NodeTracerProvider} from '@opentelemetry/sdk-trace-node';
 import {OTLPTraceExporter} from '@opentelemetry/exporter-trace-otlp-http';
@@ -20,7 +17,9 @@ type Params = {environment: string};
 // https://web.archive.org/web/20210302114215/https://tracing.cloudnative101.dev/docs/lab-jaeger-nodejs.html
 
 export function init({environment}: Params) {
-  diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ALL);
+  if (Number(JSON.parse(process.env.ALERTMOON_OPENTELEMETRY_DEBUG || '""')) === 1) {
+    diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.ALL);
+  }
   const collectorOptions = {
     // url is optional and can be omitted - default is http://localhost:4318/v1/traces
     // url: `${process.env.JAEGER_AGENT_HOST}`,
@@ -54,24 +53,5 @@ export function init({environment}: Params) {
   });
   ['SIGINT', 'SIGTERM'].forEach(signal => {
     process.on(signal, () => provider.shutdown().catch(console.error));
-  });
-}
-
-export function init2(_p: Params) {
-  // Configure a tracer provider.
-  const provider = new NodeTracerProvider({
-    sampler: new TraceIdRatioBasedSampler(0.5)
-  });
-  // Add a span exporter.
-  provider.addSpanProcessor(
-    new BatchSpanProcessor(new ConsoleSpanExporter())
-  );
-  // Register a global tracer provider.
-  provider.register();
-
-  registerInstrumentations({
-    instrumentations: [
-      new HttpInstrumentation()
-    ]
   });
 }

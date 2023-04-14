@@ -156,6 +156,7 @@ services:
       # - ./ssl:/ssl/
     networks:
       - intranet
+      - opensearch-net
 
 ### Logging
   jaeger:
@@ -166,11 +167,61 @@ services:
       - "4318:4318"
       - "14268:14268"
     restart: on-failure
+    depends_on:
+      - opensearch-node1
     environment:
       - COLLECTOR_OTLP_ENABLED=true
+      - SPAN_STORAGE_TYPE=opensearch
+      - ES_SERVER_URLS=https://opensearch-node1:9200
+      - ES_TLS_ENABLED=true
+      - ES_TLS_SKIP_HOST_VERIFY=true
+      - ES_TAGS_AS_FIELDS_ALL=true
+      - ES_USERNAME=admin
+      - ES_PASSWORD=admin
+    networks:
+      - intranet
+      - opensearch-net
+
+  # https://github.com/opensearch-project/documentation-website/blob/2.6/assets/examples/docker-compose.yml
+  opensearch-node1:
+    image: opensearchproject/opensearch:2.6.0
+    container_name: opensearch-node1
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node1
+      - discovery.seed_hosts=opensearch-node1
+      - cluster.initial_cluster_manager_nodes=opensearch-node1
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - opensearch-data1:/usr/share/opensearch/data
+    ports:
+      - "9200:9200" # REST API
+      - "9600:9600" # Performance Analyzer
+    networks:
+      - opensearch-net
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.6.0
+    container_name: opensearch-dashboards
+    ports:
+      - "5601:5601"
+    expose:
+      - "5601"
+    environment:
+      OPENSEARCH_HOSTS: '["https://opensearch-node1:9200"]'
+    networks:
+      - opensearch-net
 
 networks:
   intranet:
+  opensearch-net:
   default:
     external:
       name: sms-reader-backend-net
@@ -178,3 +229,4 @@ networks:
 volumes:
   kratos-postgres:
   mongodb:
+  opensearch-data1:

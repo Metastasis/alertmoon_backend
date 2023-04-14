@@ -47,6 +47,7 @@ profile-*
 
 # webstorm
 .idea
+.fleet
 
 # vscode
 .vscode
