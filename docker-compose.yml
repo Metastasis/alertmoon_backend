@@ -76,7 +76,9 @@ services:
     environment:
       - DSN=postgres://kratos:secret@postgresd:5432/kratos?sslmode=disable&max_conns=20&max_idle_conns=4
       - LOG_LEVEL=trace
-      - JAEGER_AGENT_HOST=jaeger
+      - TRACING_PROVIDER=jaeger
+      - TRACING_PROVIDERS_JAEGER_SAMPLING_SERVER_URL=http://jaeger:5778/sampling
+      - TRACING_PROVIDERS_JAEGER_LOCAL_AGENT_ADDRESS=jaeger:6831
     command: serve -c /etc/config/kratos/kratos.yml --dev --watch-courier
     volumes:
       - type: volume
@@ -130,7 +132,9 @@ services:
         source: ./keto/namespaces
         target: /home/ory/namespaces
     environment:
-      - JAEGER_AGENT_HOST=jaeger
+      - TRACING_PROVIDER=jaeger
+      - TRACING_PROVIDERS_JAEGER_SAMPLING_SERVER_URL=http://jaeger:5778/sampling
+      - TRACING_PROVIDERS_JAEGER_LOCAL_AGENT_ADDRESS=jaeger:6831
     networks:
       - intranet
 
